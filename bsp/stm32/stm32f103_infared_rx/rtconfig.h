@@ -80,7 +80,10 @@
 #define RT_SERIAL_USING_DMA
 #define RT_USING_CAN
 #define RT_CAN_USING_HDR
+#define RT_USING_HWTIMER
 #define RT_USING_PIN
+#define RT_USING_ADC
+#define RT_USING_WDT
 
 /* Using WiFi */
 
@@ -168,6 +171,11 @@
 #define BSP_USING_UART
 #define BSP_USING_UART1
 #define BSP_UART1_RX_USING_DMA
+#define BSP_USING_ADC
+#define BSP_USING_ADC1
+#define BSP_USING_TIM
+#define BSP_USING_TIM2
+#define BSP_USING_WDT
 
 /* Board extended module Drivers */
 
