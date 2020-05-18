@@ -56,7 +56,7 @@ rt_inline int _can_int_rx(struct rt_can_device *can, struct rt_can_msg *data, in
         rt_int32_t hdr;
 #endif /*RT_CAN_USING_HDR*/
         struct rt_can_msg_list *listmsg = RT_NULL;
-
+ 
         /* disable interrupt */
         level = rt_hw_interrupt_disable();
 #ifdef RT_CAN_USING_HDR

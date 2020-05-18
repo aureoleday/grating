@@ -47,6 +47,14 @@ void SysTick_Handler(void)
     rt_interrupt_leave();
 }
 
+void rt_hw_us_delay(rt_uint32_t us)
+{
+    rt_uint32_t delta;
+    us = us * (SysTick->LOAD / (1000000 / RT_TICK_PER_SECOND));
+    delta = SysTick->VAL;
+    while (delta - SysTick->VAL < us);
+}
+
 uint32_t HAL_GetTick(void)
 {
     return rt_tick_get() * 1000 / RT_TICK_PER_SECOND;

@@ -1,72 +1,135 @@
 #include <rtthread.h>
 #include <board.h>
+#include "sys_conf.h"
 #include "kfifo.h"
+#include "uart_com.h"
+#include "app_can.h"
 
 #define DISPLAY_APP_THREAD_STACK_SIZE        4096
+#define PIXEL_CHAN_MAX  48
 #define PIXEL_DIM       3
-#define PIXEL_NUM       4
 
-static uint32_t pix_mat[PIXEL_DIM][PIXEL_NUM];
+#define __BYTE_ORDER        0
+#define __LITTLE_ENDIAN     0
+#define __BIG_ENDIAN        1
 
-//static uint8_t 	kf_buf_raw[128*4];
-//kfifo_t 		kf_raw;
+#define PIXEL_RX_EVENT (1 << 0)
+static struct rt_event pixel_event;
 
-//void kf_init(void)
-//{
-//    rt_memset(&kf_raw, 0, sizeof(kf_raw));
-//    kfifo_init(&kf_raw, (void *)kf_buf_raw, sizeof(kf_buf_raw));
-//}
+static uint64_t pix_mat[PIXEL_DIM];
 
-//uint16_t push_raw(uint16_t data)
-//{
-//    uint16_t temp = data;
-//    uint16_t ret = 0;
-//    ret = kfifo_in(&kf_raw,&temp,sizeof(uint8_t));
-//    return ret;
-//}
+static uint8_t 	kf_buf_raw[512*4];
+kfifo_t 		kf_raw;
 
-//uint16_t pop_raw(uint16_t *data_ptr, uint16_t cnt)
-//{
-//    uint16_t ret;
-//    ret = kfifo_out(&kf_raw, data_ptr,cnt*sizeof(uint16_t));
-//    return ret;
-//}
+void kf_init(void)
+{
+    rt_event_init(&pixel_event, "pixel_rx_event", RT_IPC_FLAG_FIFO);
+    rt_memset(&kf_raw, 0, sizeof(kf_raw));
+    kfifo_init(&kf_raw, (void *)kf_buf_raw, sizeof(kf_buf_raw));
+}
+
+int16_t is_fifo_empty(void)
+{
+    if(kfifo_len(&kf_raw) > 0)
+        return 0;
+    else
+        return 1;
+}
+
+uint16_t push_raw(void *data, uint16_t cnt)
+{
+    uint16_t ret = 0;
+    ret = kfifo_in(&kf_raw,data,cnt);
+    return ret;
+}
+
+uint16_t pop_raw(void *data_ptr, uint16_t cnt)
+{
+    uint16_t ret;
+    ret = kfifo_out(&kf_raw, data_ptr,cnt);
+    return ret;
+}
+
+static void reset_kfifo_raw(void)
+{
+    kfifo_reset(&kf_raw);
+}
+
+static void reset_px_mat(void)
+{
+    for(int i=0;i<PIXEL_DIM;i++)
+    {
+        pix_mat[i] = 0;
+    }
+}
 
 uint16_t pixel_in(uint16_t chan, uint16_t pixel)
 {    
-    uint16_t i,quo,rem;
-    rem = chan%32;
-    quo = chan/32;
-    for(i=0;i<PIXEL_DIM;i++)
-    {
-        pix_mat[i][quo] |= ((pixel>>i)&0x0001)<<rem;
+    extern sys_reg_st  g_sys;
+    static uint8_t      index=0;
+    uint16_t i;
+    if(chan == PIXEL_CHAN_MAX-1)
+    {   
+        for(i=0;i<PIXEL_DIM;i++)
+        {
+            pix_mat[i] |= ((uint64_t)pixel>>i)&0x00000001;
+            pix_mat[i] |= (uint64_t)i<<48;
+            pix_mat[i] |= (uint64_t)index<<56;            
+        }
+        index++;        
+                
+        if(is_fifo_empty())
+            push_raw(pix_mat,3*sizeof(uint64_t));
+        reset_px_mat();
+//        if(g_sys.stat.lc_addr != g_sys.conf.com_addr)
+        rt_event_send(&pixel_event, PIXEL_RX_EVENT);
     }
-    if(chan >= 15)
+    else
     {
-//        rt_kprintf("pix_mat %x\n",pix_mat[0][0]);
+        for(i=0;i<PIXEL_DIM;i++)
+            pix_mat[i] = (pix_mat[i]|(((uint64_t)pixel>>i)&0x00000001))<<1;
     }
+        
+    return 0;
 }
 
 static void display_app_entry(void *parameter)
 {
-    uint16_t i,j;
-//    uint16_t rx_buf[32],len,i;
-//    kf_init();
+    extern sys_reg_st  g_sys;
+    rt_err_t ret = 0;
+    rt_uint32_t e;
+    uint16_t i;
+    uint64_t temp[3];
+    
+    kf_init();
+    
     for(i=0;i<PIXEL_DIM;i++)
     {
-        for(j=0;j<PIXEL_NUM;j++)
-            pix_mat[i][j] = 0;
-    }    
+        pix_mat[i] = 0;
+    }
+    
     while (1)
     {
-
-//        len = pop_raw(rx_buf,4*sizeof(uint16_t))/sizeof(uint16_t);
-//        rt_kprintf("len:%d,data:\n",len);
-//        for(i=0;i<len;i++)
-//            rt_kprintf(" %x ",rx_buf[i]);
-//        rt_kprintf("\n");
-//        
-        rt_thread_delay(100);
+//        if(g_sys.stat.lc_addr == g_sys.conf.com_addr)
+//        {
+//            rt_thread_delay(1000);
+//        }
+//        else
+//        {
+        ret = rt_event_recv(&pixel_event, PIXEL_RX_EVENT, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &e);
+        if (RT_EOK == ret)
+        {
+            if(kfifo_len(&kf_raw) > 0)
+            {
+                pop_raw(temp,3*sizeof(uint64_t));
+                reset_kfifo_raw();
+                for(i=0;i<3;i++)
+                {
+                    can_sendmsg((uint8_t *)&temp[i],8);
+                }
+            }
+        }
+//        }
     }
 }
 
@@ -78,7 +141,7 @@ static int display_app(void)
                             display_app_entry, 
                             RT_NULL,
                             DISPLAY_APP_THREAD_STACK_SIZE, 
-                            RT_MAIN_THREAD_PRIORITY, 
+                            12, 
                             20
                           );
     

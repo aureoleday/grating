@@ -27,6 +27,17 @@ extern "C" {
     }
 #endif /* TIM_DEV_INFO_CONFIG */
 
+#ifdef BSP_USING_TIM1
+#ifndef TIM1_CONFIG
+#define TIM1_CONFIG                             \
+    {                                           \
+       .tim_handle.Instance     = TIM1,         \
+       .tim_irqn                = TIM1_CC_IRQn,    \
+       .name                    = "timer1",     \
+    }
+#endif /* TIM2_CONFIG */
+#endif /* BSP_USING_TIM2 */
+    
 #ifdef BSP_USING_TIM2
 #ifndef TIM2_CONFIG
 #define TIM2_CONFIG                             \
@@ -36,7 +47,7 @@ extern "C" {
        .name                    = "timer2",     \
     }
 #endif /* TIM2_CONFIG */
-#endif /* BSP_USING_TIM2 */
+#endif /* BSP_USING_TIM2 */    
 
 #ifdef BSP_USING_TIM3
 #ifndef TIM3_CONFIG
@@ -67,6 +78,17 @@ extern "C" {
        .tim_handle.Instance     = TIM5,         \
        .tim_irqn                = TIM5_IRQn,    \
        .name                    = "timer5",     \
+    }
+#endif /* TIM5_CONFIG */
+#endif /* BSP_USING_TIM5 */
+    
+#ifdef BSP_USING_TIM6
+#ifndef TIM6_CONFIG
+#define TIM6_CONFIG                             \
+    {                                           \
+       .tim_handle.Instance     = TIM6,         \
+       .tim_irqn                = TIM6_IRQn,    \
+       .name                    = "timer6",     \
     }
 #endif /* TIM5_CONFIG */
 #endif /* BSP_USING_TIM5 */
