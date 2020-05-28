@@ -27,7 +27,7 @@ typedef uint32_t          time_t;
 //#define SYS_DEBUG
 #define STAT_REG_MAP_NUM        16
 #define CONF_REG_MAP_NUM		16
-#define SOFTWARE_VER			0x010a
+#define SOFTWARE_VER			0x010b
 #define HARDWARE_VER			0x0400
 #define SERIAL_NO				0
 #define MAN_DATE				0
