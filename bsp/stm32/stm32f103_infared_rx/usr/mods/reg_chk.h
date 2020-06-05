@@ -6,5 +6,6 @@ uint16_t power_opt(uint16_t pram);
 uint16_t sync_period_opt(uint16_t pram);
 uint16_t ref_set_opt(uint16_t pram);
 uint16_t sys_reset_opt(uint16_t pram);
+uint16_t dbg_opt(uint16_t pram);
 
 #endif

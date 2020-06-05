@@ -37,6 +37,7 @@ typedef struct
     uint16_t    man_date;
     uint16_t    ms_status;      //0:uninit;1:master;2:slave
     uint16_t    lc_addr;        //upper4bit: row; lower4bits:col;
+    uint16_t    dbg;
 }status_st;
 
 typedef struct

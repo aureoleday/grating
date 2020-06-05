@@ -57,10 +57,11 @@ static void reset_kfifo_raw(void)
 
 static void reset_px_mat(void)
 {
-    for(int i=0;i<PIXEL_DIM;i++)
-    {
-        pix_mat[i] = 0;
-    }
+    rt_memset(pix_mat, 0, 24);
+//    for(int i=0;i<PIXEL_DIM;i++)
+//    {
+//        pix_mat[i] = 0;
+//    }
 }
 
 uint16_t pixel_in(uint16_t chan, uint16_t pixel)
@@ -73,21 +74,38 @@ uint16_t pixel_in(uint16_t chan, uint16_t pixel)
         for(i=0;i<PIXEL_DIM;i++)
         {
             pix_mat[i] |= ((uint64_t)pixel>>i)&0x00000001;
+            pix_mat[i] &= 0x0000ffffffffffff;
             pix_mat[i] |= (uint64_t)i<<48;
-            pix_mat[i] |= (uint64_t)index<<56;            
+            pix_mat[i] |= (uint64_t)index<<56;    
+//            if(g_sys.stat.dbg == 1)
+//            {
+//                rt_kprintf("i:%d ",i);
+//                for(int j=0;j<8;j++)
+//                    rt_kprintf("%x ",*((uint8_t *)&pix_mat[i]+j));
+//                rt_kprintf("\n");
+//            }
         }
+//        if(g_sys.stat.dbg == 1)
+//            rt_kprintf("\n");
         index++;        
                 
         if(is_fifo_empty())
             push_raw(pix_mat,3*sizeof(uint64_t));
+        if(g_sys.stat.dbg == 1)
+        {
+            for(int j=0;j<24;j++)
+                rt_kprintf("%x ",*((uint8_t *)&pix_mat+j));
+            rt_kprintf("\n");
+            g_sys.stat.dbg = 0;
+        }        
         reset_px_mat();
-//        if(g_sys.stat.lc_addr != g_sys.conf.com_addr)
+
         rt_event_send(&pixel_event, PIXEL_RX_EVENT);
     }
     else
     {
-        for(i=0;i<PIXEL_DIM;i++)
-            pix_mat[i] = (pix_mat[i]|(((uint64_t)pixel>>i)&0x00000001))<<1;
+        for(int k=0;k<PIXEL_DIM;k++)
+            pix_mat[k] = (pix_mat[k]|(((uint64_t)pixel>>k)&0x00000001))<<1;
     }
         
     return 0;
@@ -110,23 +128,23 @@ static void display_app_entry(void *parameter)
     
     while (1)
     {
-//        if(g_sys.stat.lc_addr == g_sys.conf.com_addr)
-//        {
-//            rt_thread_delay(1000);
-//        }
-//        else
-//        {
         ret = rt_event_recv(&pixel_event, PIXEL_RX_EVENT, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &e);
         if (RT_EOK == ret)
         {
             if(kfifo_len(&kf_raw) > 0)
             {
                 pop_raw(temp,3*sizeof(uint64_t));
-                reset_kfifo_raw();
+                reset_kfifo_raw();                
                 for(i=0;i<3;i++)
-                {
+                {              
                     can_sendmsg((uint8_t *)&temp[i],8);
                 }
+//                if(g_sys.stat.dbg == 1)
+//                {
+//                    for(int k=0;k<24;k++)
+//                        rt_kprintf("%x ",*((uint8_t *)&temp+k));
+//                    g_sys.stat.dbg = 0;
+//                }
             }
         }
 //        }

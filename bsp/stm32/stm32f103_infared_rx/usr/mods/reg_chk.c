@@ -26,6 +26,13 @@ uint16_t ref_set_opt(uint16_t pram)
     return 1;
 }
 
+uint16_t dbg_opt(uint16_t pram)
+{
+    extern sys_reg_st  g_sys;
+    g_sys.stat.dbg = 1;    
+    return 1;
+}
+
 uint16_t sync_period_opt(uint16_t pram)
 {
     sr_hwt_stop();

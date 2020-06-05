@@ -11,11 +11,13 @@ const conf_reg_map_st conf_reg_map_inst[CONF_REG_MAP_NUM]=
 {	//id		mapped registers		                 min	    max				    default			 type    chk_prt
     {	0,		&g_sys.conf.power_en,                    0,		    1,                  1,               0,       power_opt},		
     {	1,		&g_sys.conf.hwt_thl,                     10,		100,                49,              0,       NULL},
-    {	2,		&g_sys.conf.hwt_thh,                     10,		5000,               195,             0,       NULL},
+//    {	2,		&g_sys.conf.hwt_thh,                     10,		5000,               195,             0,       NULL},
+    {	2,		&g_sys.conf.hwt_thh,                     10,		5000,               243,             0,       NULL},
     {	3,		&g_sys.conf.dac_ref,                     1,		    4095,               50,              0,       ref_set_opt},
     {	4,		&g_sys.conf.on_bits,                     1,		    8,                  1,               0,       NULL},
     {	5,		&g_sys.conf.sample_delay,                0,		    1000,               1,               0,       NULL},
-    {	6,		&g_sys.conf.sync_period,                 20,		5000,               50,              0,       sync_period_opt},
+//    {	6,		&g_sys.conf.sync_period,                 20,		5000,               50,              0,       sync_period_opt},
+    {	6,		&g_sys.conf.sync_period,                 20,		5000,               40,              0,       sync_period_opt},
     {	7,		NULL,			                         0,		    0,                  0,               0,       NULL},
     {	8,		NULL,			                         0,		    0,                  0,               0,       NULL},
     {	9,		NULL,			                         0,		    0,                  0,               0,       NULL},
@@ -23,7 +25,7 @@ const conf_reg_map_st conf_reg_map_inst[CONF_REG_MAP_NUM]=
     {	11,		NULL,			                         0,		    0,                  0,               0,       NULL},
     {	12,		NULL,			                         0,		    0,                  0,               0,       NULL},
     {	13,		NULL,			                         0,		    0,                  0,               0,       NULL},
-    {	14,		&g_sys.conf.dbg,                         0,		    1,                  0,               0,       NULL},
+    {	14,		&g_sys.conf.dbg,                         0,		    1,                  0,               0,       dbg_opt},
     {	15,		NULL,			                         9527,		9527,               0,               0,       sys_reset_opt},
 };
 
@@ -37,13 +39,14 @@ const sts_reg_map_st status_reg_map_inst[STAT_REG_MAP_NUM]=
     {	4,          &g_sys.stat.ms_status,				     0},
     {	5,          &g_sys.stat.lc_addr,					 0},
     {	6,          NULL,						             0},
+    {	7,          NULL,						             0},
     {	8,          NULL,						             0},
     {	9,          NULL,						             0},
     {	10,         NULL,						             0},
     {	11,         NULL,						             0},
     {	12,         NULL,						             0},
     {	13,         NULL,						             0},
-    {	14,         NULL,						             0},
+    {	14,         &g_sys.stat.dbg,					     0},
     {	15,         NULL,						             0}
 };
 
